@@ -7,9 +7,10 @@
 
 import UIKit
 
+// Home screen displaying popular movies
 class HomeViewController: UIViewController {
     
-    //MARK: - IBOutlets
+    // MARK: - IBOutlets
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var topNavigationView: UIView!
     @IBOutlet weak var favoriteButton: CircularButton!
@@ -17,64 +18,69 @@ class HomeViewController: UIViewController {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var movieListTableView: UITableView!
     
+    // MARK: - Properties
     private let loadingView = LoadingView()
     private var alertView = AlertHelper.shared
     private let viewModel = HomeViewModel()
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        setupUi()
-        // Enable user interaction (important for UIView)
-        searchView.isUserInteractionEnabled = true
-        
-        // Create tap gesture
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(searchViewTapped))
-        
-        // Add gesture to the view
-        searchView.addGestureRecognizer(tapGesture)
+        setupUI()
+        setupSearchGesture()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if viewModel.isReloadRequired() {
-            self.movieListTableView.reloadData()
+            movieListTableView.reloadData()
         }
     }
     
+    // MARK: - IBActions
     @IBAction func onClickGoToFavourite(_ sender: Any) {
-        self.moveToFavoriteScreen()
-    }
-    // Selector function
-    @objc private func searchViewTapped() {
-        moveToSearchScreen()
+        moveToFavoriteScreen()
     }
     
-    private func setupUi() {
+    // MARK: - UI Setup
+    private func setupUI() {
         self.navigationController?.navigationBar.isHidden = true
         setupTableView()
         fectMovieList()
     }
     
+    private func setupSearchGesture() {
+        searchView.isUserInteractionEnabled = true
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(searchViewTapped))
+        searchView.addGestureRecognizer(tapGesture)
+    }
+    
     private func setupTableView() {
         movieListTableView.delegate = self
         movieListTableView.dataSource = self
-        movieListTableView.register(UINib(nibName: ViewControllerConstants.movieListTableViewCell, bundle: nil), forCellReuseIdentifier: ViewControllerConstants.movieListTableViewCell)
-        movieListTableView.register(UINib(nibName: ViewControllerConstants.defaultTableViewCell, bundle: nil), forCellReuseIdentifier: ViewControllerConstants.defaultTableViewCell)
+        movieListTableView.register(
+            UINib(nibName: ViewControllerConstants.movieListTableViewCell, bundle: nil),
+            forCellReuseIdentifier: ViewControllerConstants.movieListTableViewCell
+        )
+        movieListTableView.register(
+            UINib(nibName: ViewControllerConstants.defaultTableViewCell, bundle: nil),
+            forCellReuseIdentifier: ViewControllerConstants.defaultTableViewCell
+        )
     }
     
+    // MARK: - Data Fetching
     private func fectMovieList() {
-        self.loadingView.show(in: self.movieListTableView)
+        loadingView.show(in: movieListTableView)
         viewModel.fetchPopularMovies { [weak self] response in
             DispatchQueue.main.async {
-                guard let self = self else {return}
+                guard let self = self else { return }
+                self.loadingView.hide()
+                
                 switch response {
                 case .success(_):
-                    self.loadingView.hide()
                     self.movieListTableView.reloadData()
                 case .failure(let failure):
-                    self.loadingView.hide()
                     self.alertView.showAlert(on: self, title: AppError.error, message: failure.message) {
-                        // Show error screen
                         self.viewModel.displayError = true
                         self.viewModel.error = failure.message
                         self.movieListTableView.reloadData()
@@ -84,35 +90,44 @@ class HomeViewController: UIViewController {
         }
     }
     
+    // MARK: - Navigation
     private func moveToMovieDetailScreen(movie: MovieResponse) {
-        let storyboard = UIStoryboard.init(name: ViewControllerConstants.movieDetailScreen, bundle: nil)
-        if let detailVc = storyboard.instantiateViewController(withIdentifier: ViewControllerConstants.movieDetailViewController) as? MovieDetailViewController {
+        let storyboard = UIStoryboard(name: ViewControllerConstants.movieDetailScreen, bundle: nil)
+        if let detailVc = storyboard.instantiateViewController(
+            withIdentifier: ViewControllerConstants.movieDetailViewController
+        ) as? MovieDetailViewController {
             let viewModel = MovieDetailViewModel(movie: movie)
             detailVc.movieDetailViewModel = viewModel
             self.navigationController?.pushViewController(detailVc, animated: true)
         }
     }
     
+    @objc private func searchViewTapped() {
+        moveToSearchScreen()
+    }
+    
     private func moveToSearchScreen() {
-        if let searchVc = self.storyboard?.instantiateViewController(withIdentifier: ViewControllerConstants.searchViewController) as? SearchViewController {
+        if let searchVc = self.storyboard?.instantiateViewController(
+            withIdentifier: ViewControllerConstants.searchViewController
+        ) as? SearchViewController {
             self.navigationController?.pushViewController(searchVc, animated: true)
         }
     }
     
     private func moveToFavoriteScreen() {
-        if let favoriteVc = self.storyboard?.instantiateViewController(withIdentifier: ViewControllerConstants.favoriteViewController) as? FavoriteViewController {
+        if let favoriteVc = self.storyboard?.instantiateViewController(
+            withIdentifier: ViewControllerConstants.favoriteViewController
+        ) as? FavoriteViewController {
             self.navigationController?.pushViewController(favoriteVc, animated: true)
         }
     }
 }
 
+// MARK: - UITableViewDelegate & UITableViewDataSource
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if !viewModel.displayError {
-            return viewModel.numberOfMovies()
-        } else {
-            return 1
-        }
+        return viewModel.displayError ? 1 : viewModel.numberOfMovies()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -144,17 +159,16 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+// MARK: - MovieListTableViewCellDelegate
 extension HomeViewController: MovieListTableViewCellDelegate {
     func didAddToFavorites(success: Bool) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else {return}
+            guard let self = self else { return }
             if success {
                 self.movieListTableView.reloadData()
             } else {
-                //show error
+                // Optionally handle error
             }
         }
     }
-    
-    
 }

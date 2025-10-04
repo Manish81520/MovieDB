@@ -1,12 +1,6 @@
-//
-//  EndPoints.swift
-//  MovieDB
-//
-//  Created by Manish T on 04/10/25.
-//
-
 import Foundation
 
+/// Enum representing different API endpoints for TMDB
 enum Endpoint {
     case popular(page: Int = 1)
     case search(query: String, page: Int = 1)
@@ -14,16 +8,23 @@ enum Endpoint {
     case videos(id: Int)
     case credits(id: Int)
     
+    /// Path component for each endpoint
     private var path: String {
         switch self {
-        case .popular: return "/movie/popular"
-        case .search: return "/search/movie"
-        case .details(let id): return "/movie/\(id)"
-        case .videos(let id): return "/movie/\(id)/videos"
-        case .credits(let id): return "/movie/\(id)/credits"
+        case .popular:
+            return "/movie/popular"
+        case .search:
+            return "/search/movie"
+        case .details(let id):
+            return "/movie/\(id)"
+        case .videos(let id):
+            return "/movie/\(id)/videos"
+        case .credits(let id):
+            return "/movie/\(id)/credits"
         }
     }
     
+    /// Query parameters for each endpoint
     private var queryItems: [URLQueryItem] {
         var items: [URLQueryItem] = []
         
@@ -37,11 +38,12 @@ enum Endpoint {
             break
         }
         
-        // Always append API key last
+        // Always include API key
         items.append(URLQueryItem(name: "api_key", value: API.apiKey))
         return items
     }
     
+    /// Full URL constructed from base URL, path, and query items
     var url: URL? {
         guard var components = URLComponents(string: API.baseURL) else { return nil }
         components.path += path

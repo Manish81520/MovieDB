@@ -12,7 +12,6 @@ class GenereCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
     }
 
     func setupText(for genere: String) {

@@ -8,6 +8,7 @@
 import UIKit
 import YouTubeiOSPlayerHelper
 
+// ViewController to display movie details, genres, cast, and trailer
 class MovieDetailViewController: UIViewController {
     
     // MARK: - Outlets
@@ -33,37 +34,27 @@ class MovieDetailViewController: UIViewController {
     private var alertView = AlertHelper.shared
     var movieDetailViewModel: MovieDetailViewModel?
     
-    
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         initialSetup()
     }
     
-    // MARK: - Setup
-    /// Perform initial UI setup
+    // MARK: - Initial Setup
+    /// Perform initial UI setup and API fetching
     private func initialSetup() {
-        // Hide default navigation UI
         navigationItem.hidesBackButton = true
         navigationController?.navigationBar.isHidden = true
         
-        // Scroll view setup
         scrollView.contentInsetAdjustmentBehavior = .never
-        
-        // Poster setup
         posterView.contentMode = .scaleAspectFill
         
-        // Buttons styling
         trailerButton.layer.cornerRadius = trailerButton.frame.height / 2
         addToFavouriteButton.layer.cornerRadius = addToFavouriteButton.frame.height / 2
         backButton.setBlurTransparency(0.6)
+        
         setupFavoriteObserver()
-        
-        // Collection view setup
         setupCollectionView()
-        
-        // Fetch API data
         fetchMovieDetails()
     }
     
@@ -77,6 +68,14 @@ class MovieDetailViewController: UIViewController {
         )
     }
     
+    /// Observe changes to favorite status
+    private func setupFavoriteObserver() {
+        movieDetailViewModel?.didAddOrRemoveFavorite = { [weak self] isFav in
+            guard let self = self else { return }
+            self.updateFavoriteButton(added: isFav)
+        }
+    }
+    
     // MARK: - Actions
     @IBAction func onClickBackButton(_ sender: UIButton) {
         navigationController?.popViewController(animated: true)
@@ -84,38 +83,31 @@ class MovieDetailViewController: UIViewController {
     
     @IBAction func onClickAddOrRemoveFav(_ sender: Any) {
         movieDetailViewModel?.removeOrAddToFavorite()
-        
     }
     
     @IBAction func onClickPlayTrailer(_ sender: Any) {
-        // Ensure layout is up-to-date
         self.view.layoutIfNeeded()
-        
-        // Calculate bottom offset
-        let bottomOffset = CGPoint(x: 0, y: scrollView.contentSize.height - scrollView.bounds.size.height + scrollView.contentInset.bottom)
-        
-        // Scroll to bottom with animation
+        let bottomOffset = CGPoint(
+            x: 0,
+            y: scrollView.contentSize.height - scrollView.bounds.size.height + scrollView.contentInset.bottom
+        )
         if bottomOffset.y > 0 {
             scrollView.setContentOffset(bottomOffset, animated: true)
         }
-        
         playerView.playVideo()
     }
     
-    
     // MARK: - API
-    /// Fetch movie details via view model
+    /// Fetch movie details from API
     private func fetchMovieDetails() {
         loadingView.show(in: view)
-        
-        movieDetailViewModel?.fetchAllDataAndReload { [weak self] success, error  in
+        movieDetailViewModel?.fetchAllDataAndReload { [weak self] success, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
+                self.loadingView.hide()
                 if success {
-                    self.loadingView.hide()
                     self.setupDetailView()
                 } else {
-                    self.loadingView.hide()
                     self.alertView.showAlert(on: self, title: AppError.error, message: error ?? "") {
                         self.navigationController?.popViewController(animated: true)
                     }
@@ -124,70 +116,56 @@ class MovieDetailViewController: UIViewController {
         }
     }
     
-    // MARK: - UI Updates
-    /// Setup UI with fetched movie details
+    // MARK: - UI Setup
+    /// Populate UI with movie details
     private func setupDetailView() {
         guard let movie = movieDetailViewModel?.getMovieDetail() else { return }
         
-        // Title & overview
         movieTitleLabel.text = movie.title ?? ""
         setupOverviewAndCast()
         setupFavoriteButton()
         
-        // Genres
         genereCollectionView.reloadData()
         setupVideoPlayerView()
-        // Adjust gradient view height based on dynamic label height
+        
+        // Adjust gradient view height dynamically
         let labelHeight = movieTitleLabel.intrinsicContentSize.height
         gradientViewHeightConstraint.constant = gradientView.frame.height + labelHeight
         view.layoutIfNeeded()
         
-        // Rating text
-        movieRatingLabel.attributedText = movieDetailViewModel?.getMovieInfoText()
-            ?? NSAttributedString(string: "")
+        movieRatingLabel.attributedText = movieDetailViewModel?.getMovieInfoText() ?? NSAttributedString(string: "")
         
-        // Backdrop image
-        
-        if let path = movie.backdropPath, let url = URL(string: API.imageBaseURL + "/original" + path) {
-            _ = ImageLoader.shared.loadImage(from: url, into: posterView, completion: { _ in
-                
-            })
-        } else if let path = movie.posterPath, let url = URL(string: API.imageBaseURL + "/original" + path) {
-            _ = ImageLoader.shared.loadImage(from: url, into: posterView, completion: { _ in
-                
-            })
+        if let path = movie.backdropPath ?? movie.posterPath,
+           let url = URL(string: API.imageBaseURL + "/original" + path) {
+            _ = ImageLoader.shared.loadImage(from: url, into: posterView) { _ in }
         } else {
             posterView.image = UIImage(named: "remove")
         }
     }
     
+    /// Setup favorite button state
     private func setupFavoriteButton() {
         guard let movieId = movieDetailViewModel?.getMovieDetail()?.id else { return }
-        if movieDetailViewModel?.isFavoriteMovie(for: movieId) ?? false  {
-            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartFillImageName), for: .normal)
-            self.addToFavouriteButton.setTitle(AppConstants.removeFromFavorite, for: .normal)
-            addToFavouriteButton.tintColor = UIColor(hex: AppConstants.heartRedColor)
-        } else {
-            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
-            self.addToFavouriteButton.setTitle(AppConstants.addToFavorite, for: .normal)
-            self.addToFavouriteButton.tintColor = .white
-        }
+        let isFav = movieDetailViewModel?.isFavoriteMovie(for: movieId) ?? false
+        updateFavoriteButton(added: isFav)
     }
+    
+    /// Update favorite button UI
     private func updateFavoriteButton(added: Bool) {
         if added {
-            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartFillImageName), for: .normal)
-            self.addToFavouriteButton.setTitle(AppConstants.removeFromFavorite, for: .normal)
+            addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartFillImageName), for: .normal)
+            addToFavouriteButton.setTitle(AppConstants.removeFromFavorite, for: .normal)
             addToFavouriteButton.tintColor = UIColor(hex: AppConstants.heartRedColor)
         } else {
-            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
-            self.addToFavouriteButton.setTitle(AppConstants.addToFavorite, for: .normal)
-            self.addToFavouriteButton.tintColor = .white
+            addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
+            addToFavouriteButton.setTitle(AppConstants.addToFavorite, for: .normal)
+            addToFavouriteButton.tintColor = .white
         }
     }
     
-    //Setup overview and cast
+    /// Setup overview and cast labels
     private func setupOverviewAndCast() {
-        //Overview
+        // Overview
         if let overview = movieDetailViewModel?.getoverview() {
             overViewTitleLabel.isHidden = false
             overViewLabel.isHidden = false
@@ -195,56 +173,47 @@ class MovieDetailViewController: UIViewController {
             overViewLabel.text = overview
         } else {
             overViewTitleLabel.isHidden = true
-            overViewTitleLabel.text = ""
             overViewLabel.isHidden = true
+            overViewTitleLabel.text = ""
         }
         
-        //Cast
+        // Cast
         if let cast = movieDetailViewModel?.getCastText() {
             castTitleLabel.isHidden = false
             castLabel.isHidden = false
-            castLabel.text = cast
             castTitleLabel.text = "Cast"
+            castLabel.text = cast
         } else {
             castTitleLabel.isHidden = true
             castLabel.isHidden = true
             castTitleLabel.text = ""
         }
         
+        // Trailer title
         if let _ = movieDetailViewModel?.getVideoDetails() {
-            self.trailerTitle.isHidden = false
-            self.trailerTitle.text = "Trailer"
+            trailerTitle.isHidden = false
+            trailerTitle.text = "Trailer"
         } else {
-            self.trailerTitle.isHidden = false
-            self.trailerTitle.text = ""
+            trailerTitle.isHidden = true
+            trailerTitle.text = ""
         }
     }
     
+    /// Setup YouTube player view
     private func setupVideoPlayerView() {
         let playerVars: [String: Any] = [
-            "playsinline": 1,    // play inline instead of fullscreen
-            "autoplay": 0,       // auto-play
-            "controls": 1,       // show controls
-            "rel": 0             // don't show related videos
+            "playsinline": 1,
+            "autoplay": 0,
+            "controls": 1,
+            "rel": 0
         ]
-
-//        playerView.load(withVideoId: videoId, playerVars: playerVars)
+        
         guard let videoId = movieDetailViewModel?.firstTrailerOrTeaserId() else {
             alertView.showAlert(on: self, title: AppError.error, message: AppError.noTrailerAvailable)
             return
         }
         playerView.load(withVideoId: videoId, playerVars: playerVars)
     }
-    
-    private func setupFavoriteObserver() {
-        movieDetailViewModel?.didAddOrRemoveFavorite = { [weak self] isFav in
-            guard let self = self else { return }
-            // Update the button UI
-            self.updateFavoriteButton(added: isFav)
-        }
-    }
-
-
 }
 
 // MARK: - UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout

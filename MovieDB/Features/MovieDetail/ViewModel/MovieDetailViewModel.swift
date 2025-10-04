@@ -26,6 +26,7 @@ final class MovieDetailViewModel {
     var coreDataManager = CoreDataManager.shared
     
     var didAddOrRemoveFavorite: ((Bool) -> Void)?
+    
     // MARK: - Initializer
     init(movie: MovieResponse) {
         self.movie = movie
@@ -47,7 +48,7 @@ final class MovieDetailViewModel {
                         
                         self?.fetchCastDetais { castResult in
                             switch castResult {
-                            case .success(let _):
+                            case .success(_):
                                 completion(true, nil)
                             case .failure(let error):
                                 completion(false, error.localizedDescription)
@@ -82,7 +83,8 @@ final class MovieDetailViewModel {
         
         // Add star image inline
         let starAttachment = NSTextAttachment()
-        starAttachment.image = UIImage(systemName: "star.fill")?.withTintColor(.systemYellow, renderingMode: .alwaysOriginal)
+        starAttachment.image = UIImage(systemName: "star.fill")?
+            .withTintColor(.systemYellow, renderingMode: .alwaysOriginal)
         starAttachment.bounds = CGRect(x: 0, y: -2, width: 12, height: 12)
         
         fullText.append(NSAttributedString(attachment: starAttachment))
@@ -109,28 +111,62 @@ final class MovieDetailViewModel {
     /// Returns all cast names from Acting department as a comma-separated string.
     func getCastText() -> String? {
         guard let castDetails = castDetails else { return nil }
-        
         let actors = castDetails
             .filter { $0.knownForDepartment?.lowercased() == "acting" }
             .compactMap { $0.name }
-        
         return actors.isEmpty ? nil : actors.joined(separator: ", ")
     }
     
-    ///Returns video Details
+    /// Returns video details.
     func getVideoDetails() -> [Video]? {
         return self.videoDetails?.results
     }
     
-    // MARK: - Private Methods
+    // MARK: - Favorite Methods
     
-    /// Fetches movie details from API.
+    /// Returns whether the movie is already a favorite.
+    func isFavoriteMovie(for movieId: Int) -> Bool {
+        return coreDataManager.isFavorite(movieId: movieId)
+    }
+    
+    /// Adds or removes movie from favorites depending on current state.
+    func removeOrAddToFavorite() {
+        let isFav = coreDataManager.isFavorite(movieId: movie.movieId ?? 0)
+        if isFav {
+            removeMovieFromFavorite(movieId: movie.movieId ?? 0)
+        } else {
+            addMovieToFavorite(currentMovie: movie)
+        }
+    }
+    
+    private func removeMovieFromFavorite(movieId: Int) {
+        coreDataManager.removeFavorite(movieId: movieId) { [weak self] _ in
+            self?.didAddOrRemoveFavorite?(false)
+        }
+    }
+    
+    private func addMovieToFavorite(currentMovie: MovieResponse) {
+        coreDataManager.saveFavorite(favorite: currentMovie) { [weak self] _ in
+            self?.didAddOrRemoveFavorite?(true)
+        }
+    }
+    
+    // MARK: - Video Helpers
+    
+    /// Returns the first trailer or teaser video ID, if available.
+    func firstTrailerOrTeaserId() -> String? {
+        guard let videos = self.videoDetails?.results else { return nil }
+        return videos.first(where: { $0.type == VideoType.trailer.rawValue })?.key ??
+               videos.first(where: { $0.type == VideoType.teaser.rawValue })?.key
+    }
+    
+    // MARK: - Private API Methods
+    
     private func fetchMovieDetails(completion: @escaping (Result<MovieDetail?, NetworkError>) -> Void) {
         guard let movieId = movie.movieId else {
             completion(.failure(.noData))
             return
         }
-        
         APIService.shared.fetch(.details(id: movieId)) { (result: Result<MovieDetail, NetworkError>) in
             switch result {
             case .success(let response):
@@ -142,13 +178,11 @@ final class MovieDetailViewModel {
         }
     }
     
-    /// Fetches video details from API.
     private func fetchVideoDetails(completion: @escaping (Result<VideoDetail, NetworkError>) -> Void) {
         guard let movieId = movie.movieId else {
             completion(.failure(.noData))
             return
         }
-        
         APIService.shared.fetch(.videos(id: movieId)) { (result: Result<VideoDetail, NetworkError>) in
             switch result {
             case .success(let response):
@@ -160,13 +194,11 @@ final class MovieDetailViewModel {
         }
     }
     
-    /// Fetches cast details from API.
     private func fetchCastDetais(completion: @escaping (Result<Credits, NetworkError>) -> Void) {
         guard let movieId = movie.movieId else {
             completion(.failure(.noData))
             return
         }
-        
         APIService.shared.fetch(.credits(id: movieId)) { (result: Result<Credits, NetworkError>) in
             switch result {
             case .success(let response):
@@ -178,58 +210,13 @@ final class MovieDetailViewModel {
         }
     }
     
-    /// Formats runtime in minutes into hours and minutes.
+    // MARK: - Helpers
+    
+    /// Converts runtime in minutes to hours and minutes string.
     private func formatRuntime(_ minutes: Int?) -> String {
         guard let minutes = minutes else { return "N/A" }
         let hours = minutes / 60
         let mins = minutes % 60
         return hours > 0 ? "\(hours)h \(mins)m" : "\(mins)m"
     }
-    
-    /// Returns video url
-    func firstTrailerOrTeaserId() -> String? {
-        guard let videos = self.videoDetails?.results else { return nil }
-        
-        // Try to find a trailer first
-        if let trailer = videos.first(where: { $0.type == VideoType.trailer.rawValue }) {
-            return trailer.key
-        }
-        
-        // If no trailer, try to find a teaser
-        if let teaser = videos.first(where: { $0.type == VideoType.teaser.rawValue }) {
-            return teaser.key
-        }
-        
-        // If neither exists
-        return nil
-    }
-    
-    ///Returns if the movie is fav or no
-    func isFavoriteMovie(for movieId: Int) -> Bool {
-        return coreDataManager.isFavorite(movieId: movieId)
-    }
-    
-    func removeOrAddToFavorite() {
-            let isFav = coreDataManager.isFavorite(movieId: movie.movieId ?? 0)
-            if isFav {
-                // remove
-                self.removeMovieFromFavorite(movieId: movie.movieId ?? 0)
-            } else {
-                // add
-                self.addMovieToFavorite(currentMovie: movie)
-            }
-    }
-    
-    private func removeMovieFromFavorite(movieId: Int) {
-        coreDataManager.removeFavorite(movieId: movieId) {  [weak self] success in
-            self?.didAddOrRemoveFavorite?(false)
-        }
-    }
-    
-    private func addMovieToFavorite(currentMovie: MovieResponse) {
-        coreDataManager.saveFavorite(favorite: currentMovie) { [weak self] success in
-            self?.didAddOrRemoveFavorite?(true)
-        }
-    }
-
 }
