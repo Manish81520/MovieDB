@@ -145,9 +145,17 @@ class MovieDetailViewController: UIViewController {
             ?? NSAttributedString(string: "")
         
         // Backdrop image
-        if let path = movie.backdropPath,
-           let url = URL(string: API.imageBaseURL + "/original" + path) {
-            _ = ImageLoader.shared.loadImage(from: url, into: posterView, completion: { _ in })
+        
+        if let path = movie.backdropPath, let url = URL(string: API.imageBaseURL + "/original" + path) {
+            _ = ImageLoader.shared.loadImage(from: url, into: posterView, completion: { _ in
+                
+            })
+        } else if let path = movie.posterPath, let url = URL(string: API.imageBaseURL + "/original" + path) {
+            _ = ImageLoader.shared.loadImage(from: url, into: posterView, completion: { _ in
+                
+            })
+        } else {
+            posterView.image = UIImage(named: "remove")
         }
     }
     

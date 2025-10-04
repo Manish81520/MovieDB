@@ -60,7 +60,14 @@ final class ImageLoader {
                 let image = UIImage(data: data),
                 error == nil
             else {
-                DispatchQueue.main.async { completion(nil) }
+                DispatchQueue.main.async {
+                    let placeholder = UIImage(named: "remove")
+                    if let imageView = imageView {
+                        imageView.image = placeholder
+                        imageView.alpha = 1
+                    }
+                    completion(placeholder)
+                }
                 return
             }
             

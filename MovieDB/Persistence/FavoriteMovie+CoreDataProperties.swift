@@ -20,6 +20,7 @@ extension FavoriteMovie {
     @NSManaged public var posterUrl: String?
     @NSManaged public var title: String?
     @NSManaged public var rating: String?
+    @NSManaged public var imageUrl: String?
 
 }
 

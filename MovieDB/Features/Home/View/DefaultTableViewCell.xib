@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="DefaultTableViewCell" rowHeight="141" id="KGk-i7-Jjw" customClass="DefaultTableViewCell" customModule="MovieDB" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="368" height="141"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="368" height="141"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="taB-tA-I6j">
+                        <rect key="frame" x="0.0" y="0.0" width="368" height="141"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="remove" translatesAutoresizingMaskIntoConstraints="NO" id="bvh-8F-3LL">
+                                <rect key="frame" x="0.0" y="26" width="115" height="89"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="89" id="3qO-2i-Rdr"/>
+                                    <constraint firstAttribute="width" constant="115" id="Rc7-Ed-3EO"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No movies to display." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m37-jk-O42">
+                                <rect key="frame" x="131" y="22" width="221" height="20"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="17"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3lJ-Xw-93f" customClass="CapsuleButton" customModule="MovieDB" customModuleProvider="target">
+                                <rect key="frame" x="199" y="64" width="85" height="35"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="35" id="DTw-hQ-kpI"/>
+                                    <constraint firstAttribute="width" constant="85" id="j7j-Nt-hkq"/>
+                                </constraints>
+                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Retry"/>
+                                <connections>
+                                    <action selector="onClickRetry:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="zJJ-ix-LFO"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="141" id="984-ml-WdB"/>
+                            <constraint firstItem="3lJ-Xw-93f" firstAttribute="centerX" secondItem="m37-jk-O42" secondAttribute="centerX" id="LQO-nC-eZ1"/>
+                            <constraint firstAttribute="trailing" secondItem="m37-jk-O42" secondAttribute="trailing" constant="16" id="Q5Y-xU-aQW"/>
+                            <constraint firstItem="bvh-8F-3LL" firstAttribute="centerY" secondItem="taB-tA-I6j" secondAttribute="centerY" id="SvO-j6-0py"/>
+                            <constraint firstItem="m37-jk-O42" firstAttribute="leading" secondItem="bvh-8F-3LL" secondAttribute="trailing" constant="16" id="U2c-1h-IG2"/>
+                            <constraint firstItem="m37-jk-O42" firstAttribute="top" secondItem="taB-tA-I6j" secondAttribute="top" constant="22" id="r2y-Ry-HeD"/>
+                            <constraint firstItem="bvh-8F-3LL" firstAttribute="leading" secondItem="taB-tA-I6j" secondAttribute="leading" id="rCi-Ii-GhG"/>
+                            <constraint firstItem="3lJ-Xw-93f" firstAttribute="top" secondItem="m37-jk-O42" secondAttribute="bottom" constant="22" id="z8p-sX-rdb"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                <constraints>
+                    <constraint firstAttribute="bottom" secondItem="taB-tA-I6j" secondAttribute="bottom" id="10f-Dg-dcj"/>
+                    <constraint firstItem="taB-tA-I6j" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" id="PdF-55-2FR"/>
+                    <constraint firstItem="taB-tA-I6j" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" id="hd1-cM-xYq"/>
+                    <constraint firstAttribute="trailing" secondItem="taB-tA-I6j" secondAttribute="trailing" id="kGZ-3l-2C5"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <connections>
+                <outlet property="errorMessage" destination="m37-jk-O42" id="zec-dH-s8W"/>
+                <outlet property="retryButton" destination="3lJ-Xw-93f" id="CgT-m0-fa5"/>
+            </connections>
+            <point key="canvasLocation" x="137.40458015267174" y="53.87323943661972"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="remove" width="512" height="512"/>
+    </resources>
+</document>

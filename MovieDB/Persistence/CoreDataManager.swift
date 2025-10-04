@@ -42,6 +42,7 @@ final class CoreDataManager {
         let favoriteMovie = FavoriteMovie(context: context)
         favoriteMovie.movieId = Int64(favorite.movieId ?? 0)
         favoriteMovie.title = favorite.movieTitle ?? ""
+        favoriteMovie.imageUrl = favorite.backdropPath ?? ""
         favoriteMovie.posterUrl = favorite.posterPath ?? ""
         favoriteMovie.rating = String(format: "%.1f", favorite.voteAverage ?? 0.0)
         

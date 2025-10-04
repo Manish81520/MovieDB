@@ -24,6 +24,14 @@ class HomeViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         setupUi()
+        // Enable user interaction (important for UIView)
+        searchView.isUserInteractionEnabled = true
+        
+        // Create tap gesture
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(searchViewTapped))
+        
+        // Add gesture to the view
+        searchView.addGestureRecognizer(tapGesture)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -33,7 +41,16 @@ class HomeViewController: UIViewController {
         }
     }
     
+    @IBAction func onClickGoToFavourite(_ sender: Any) {
+        self.moveToFavoriteScreen()
+    }
+    // Selector function
+    @objc private func searchViewTapped() {
+        moveToSearchScreen()
+    }
+    
     private func setupUi() {
+        self.navigationController?.navigationBar.isHidden = true
         setupTableView()
         fectMovieList()
     }
@@ -42,6 +59,7 @@ class HomeViewController: UIViewController {
         movieListTableView.delegate = self
         movieListTableView.dataSource = self
         movieListTableView.register(UINib(nibName: "MovieListTableViewCell", bundle: nil), forCellReuseIdentifier: "MovieListTableViewCell")
+        movieListTableView.register(UINib(nibName: "DefaultTableViewCell", bundle: nil), forCellReuseIdentifier: "DefaultTableViewCell")
     }
     
     private func fectMovieList() {
@@ -57,6 +75,9 @@ class HomeViewController: UIViewController {
                     self.loadingView.hide()
                     self.alertView.showAlert(on: self, title: "Error", message: failure.message) {
                         // Show error screen
+                        self.viewModel.displayError = true
+                        self.viewModel.error = failure.message
+                        self.movieListTableView.reloadData()
                     }
                 }
             }
@@ -71,18 +92,43 @@ class HomeViewController: UIViewController {
             self.navigationController?.pushViewController(detailVc, animated: true)
         }
     }
+    
+    private func moveToSearchScreen() {
+        if let searchVc = self.storyboard?.instantiateViewController(withIdentifier: "SearchViewController") as? SearchViewController {
+            self.navigationController?.pushViewController(searchVc, animated: true)
+        }
+    }
+    
+    private func moveToFavoriteScreen() {
+        if let favoriteVc = self.storyboard?.instantiateViewController(withIdentifier: "FavoriteViewController") as? FavoriteViewController {
+            self.navigationController?.pushViewController(favoriteVc, animated: true)
+        }
+    }
 }
 
 extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.numberOfMovies()
+        if !viewModel.displayError {
+            return viewModel.numberOfMovies()
+        } else {
+            return 1
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if let cell = tableView.dequeueReusableCell(withIdentifier: "MovieListTableViewCell") as? MovieListTableViewCell {
-            cell.setupMovieTile(for: viewModel.getMovieDetail(at: indexPath.row))
-            cell.delegate = self
-            return cell
+        if !viewModel.displayError {
+            if let cell = tableView.dequeueReusableCell(withIdentifier: "MovieListTableViewCell") as? MovieListTableViewCell {
+                cell.setupMovieTile(for: viewModel.getMovieDetail(at: indexPath.row))
+                cell.delegate = self
+                return cell
+            }
+        } else {
+            if let cell = tableView.dequeueReusableCell(withIdentifier: "DefaultTableViewCell") as? DefaultTableViewCell {
+                cell.configure(message: viewModel.error ?? "", canRetry: true) {
+                    self.fectMovieList()
+                }
+                return cell
+            }
         }
         return UITableViewCell()
     }

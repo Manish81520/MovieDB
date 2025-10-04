@@ -88,6 +88,12 @@ class MovieListTableViewCell: UITableViewCell {
             _ = ImageLoader.shared.loadImage(from: url, into: moviePosterImageView, completion: { _ in
                 
             })
+        } else if let path = movie?.posterPath, let url = URL(string: API.imageBaseURL + "/original" + path) {
+            _ = ImageLoader.shared.loadImage(from: url, into: moviePosterImageView, completion: { _ in
+                
+            })
+        } else {
+            moviePosterImageView.image = UIImage(named: "remove")
         }
         setupFavoriteButton()
     }

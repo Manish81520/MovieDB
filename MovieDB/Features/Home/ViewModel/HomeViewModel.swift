@@ -12,6 +12,8 @@ final class HomeViewModel {
     // MARK: - Properties
     var movies: [MovieResponse]? = []
     var coreDataManager = CoreDataManager.shared
+    var displayError: Bool = false
+    var error: String?
     
     // MARK: - Fetch Popular Movies
     func fetchPopularMovies(completion: @escaping (Result<[MovieResponse]?, NetworkError>) -> Void) {
