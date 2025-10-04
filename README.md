@@ -90,13 +90,5 @@ The app implements comprehensive error handling:
 5. Submit a pull request
 ## 📞 Support
 For support or questions, please contact [manishrthingalaya@gmail.com]
-## 🔮 Future Enhancements
-- [ ] Movie trailers and videos
-- [ ] User reviews and ratings
-- [ ] Advanced filtering and sorting
-- [ ] Dark mode support
-- [ ] iPad optimization
-- [ ] Widget support
-- [ ] Push notifications for new releases
 ---
 **Built with ❤️ using Swift and UIKit**
