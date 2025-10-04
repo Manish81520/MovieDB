@@ -82,8 +82,6 @@ The app implements comprehensive error handling:
 - Add documentation for public APIs
 - Maintain consistent indentation and formatting
   
-## 📄 License
-*Add your license information here*
 ## 🤝 Contributing
 1. Fork the repository
 2. Create a feature branch
