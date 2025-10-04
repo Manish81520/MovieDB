@@ -16,15 +16,25 @@ enum VideoType: String, Codable {
 }
 
 /// ViewModel responsible for fetching and formatting all data required for `MovieDetailViewController`.
+import UIKit
+
 final class MovieDetailViewModel {
     
     // MARK: - Properties
     private var movie: MovieResponse
-    private var movieDetail: MovieDetail?
-    private var videoDetails: VideoDetail?
-    private var castDetails: [Cast]?
+    private(set) var movieDetail: MovieDetail?
+    private(set) var videoDetails: VideoDetail?
+    private(set) var castDetails: [Cast]?
     var coreDataManager = CoreDataManager.shared
     
+    // MARK: - MVVM Outputs
+    // Emits the single movie as a 1-element array to satisfy onMovies signature.
+    var onMovies: (([MovieResponse]) -> Void)?
+    var onLoading: ((Bool) -> Void)?
+    var onError: ((String, Bool) -> Void)? // message, canRetry
+    var onFavoritesSync: (() -> Void)?
+    
+    // Keeps existing callback for minimal change to VC code already using it.
     var didAddOrRemoveFavorite: ((Bool) -> Void)?
     
     // MARK: - Initializer
@@ -35,32 +45,45 @@ final class MovieDetailViewModel {
     // MARK: - Public Methods
     
     /// Fetches movie details, videos, and cast data sequentially, then calls completion.
+    /// Also emits MVVM outputs for loading, data, and error.
     func fetchAllDataAndReload(completion: @escaping (Bool, String?) -> Void) {
+        onLoading?(true)
         fetchMovieDetails { [weak self] movieResult in
+            guard let self = self else { return }
             switch movieResult {
             case .success(let movieDetail):
-                self?.movieDetail = movieDetail
+                self.movieDetail = movieDetail
+                self.emitMoviesIfNeeded() // pre-emit the base movie to allow early UI updates
                 
-                self?.fetchVideoDetails { videoResult in
+                self.fetchVideoDetails { [weak self] videoResult in
+                    guard let self = self else { return }
                     switch videoResult {
                     case .success(let videoDetail):
-                        self?.videoDetails = videoDetail
+                        self.videoDetails = videoDetail
                         
-                        self?.fetchCastDetais { castResult in
+                        self.fetchCastDetais { [weak self] castResult in
+                            guard let self = self else { return }
+                            self.onLoading?(false)
                             switch castResult {
-                            case .success(_):
+                            case .success(let credits):
+                                self.castDetails = credits.cast
                                 completion(true, nil)
                             case .failure(let error):
+                                self.onError?(error.localizedDescription, true)
                                 completion(false, error.localizedDescription)
                             }
                         }
                         
                     case .failure(let error):
+                        self.onLoading?(false)
+                        self.onError?(error.localizedDescription, true)
                         completion(false, error.localizedDescription)
                     }
                 }
                 
             case .failure(let error):
+                self.onLoading?(false)
+                self.onError?(error.localizedDescription, true)
                 completion(false, error.localizedDescription)
             }
         }
@@ -131,9 +154,10 @@ final class MovieDetailViewModel {
     
     /// Adds or removes movie from favorites depending on current state.
     func removeOrAddToFavorite() {
-        let isFav = coreDataManager.isFavorite(movieId: movie.movieId ?? 0)
+        let movieId = movie.movieId ?? 0
+        let isFav = coreDataManager.isFavorite(movieId: movieId)
         if isFav {
-            removeMovieFromFavorite(movieId: movie.movieId ?? 0)
+            removeMovieFromFavorite(movieId: movieId)
         } else {
             addMovieToFavorite(currentMovie: movie)
         }
@@ -141,13 +165,17 @@ final class MovieDetailViewModel {
     
     private func removeMovieFromFavorite(movieId: Int) {
         coreDataManager.removeFavorite(movieId: movieId) { [weak self] _ in
-            self?.didAddOrRemoveFavorite?(false)
+            guard let self = self else { return }
+            self.didAddOrRemoveFavorite?(false)
+            self.onFavoritesSync?()
         }
     }
     
     private func addMovieToFavorite(currentMovie: MovieResponse) {
         coreDataManager.saveFavorite(favorite: currentMovie) { [weak self] _ in
-            self?.didAddOrRemoveFavorite?(true)
+            guard let self = self else { return }
+            self.didAddOrRemoveFavorite?(true)
+            self.onFavoritesSync?()
         }
     }
     
@@ -162,7 +190,7 @@ final class MovieDetailViewModel {
     
     // MARK: - Private API Methods
     
-    private func fetchMovieDetails(completion: @escaping (Result<MovieDetail?, NetworkError>) -> Void) {
+    private func fetchMovieDetails(completion: @escaping (Result<MovieDetail, NetworkError>) -> Void) {
         guard let movieId = movie.movieId else {
             completion(.failure(.noData))
             return
@@ -202,6 +230,8 @@ final class MovieDetailViewModel {
         APIService.shared.fetch(.credits(id: movieId)) { (result: Result<Credits, NetworkError>) in
             switch result {
             case .success(let response):
+                // Note: castDetails is also set at the final junction in fetchAllDataAndReload for success path,
+                // but we set it here too so it’s consistent if this is called directly.
                 self.castDetails = response.cast
                 completion(.success(response))
             case .failure(let error):
@@ -218,5 +248,9 @@ final class MovieDetailViewModel {
         let hours = minutes / 60
         let mins = minutes % 60
         return hours > 0 ? "\(hours)h \(mins)m" : "\(mins)m"
+    }
+    
+    private func emitMoviesIfNeeded() {
+        onMovies?([movie])
     }
 }

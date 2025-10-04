@@ -5,16 +5,16 @@
 //  Created by Manish T on 04/10/25.
 //
 
-import Foundation
 import UIKit
 
-// UITableViewCell to display a message when there are no favorite movies
+/// UITableViewCell to display a message when there are no favorite movies.
 class NoFavoritesTableViewCell: UITableViewCell {
     
     // MARK: - UI Elements
+    /// Label to display the "no favorites" message
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.text = "No favorite data"           // Default message
+        label.text = "No favorite data"                // Default message
         label.textAlignment = .center
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textColor = .lightGray
@@ -34,15 +34,23 @@ class NoFavoritesTableViewCell: UITableViewCell {
     }
     
     // MARK: - UI Setup
-    /// Sets up the cell's UI components and layout
+    /// Adds subviews and sets up constraints for the cell
     private func setupUI() {
         backgroundColor = .clear
+        selectionStyle = .none
         contentView.addSubview(messageLabel)
         
-        // Center the message label in the cell
+        // Center the message label within the cell
         NSLayoutConstraint.activate([
             messageLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             messageLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
+    }
+    
+    // MARK: - Public API
+    /// Configure the message displayed in the cell
+    /// - Parameter message: The text to display
+    func configure(message: String) {
+        messageLabel.text = message
     }
 }
