@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol MovieListTableViewCellDelegate: AnyObject {
+    func didAddToFavorites(success: Bool)
+    
+}
 class MovieListTableViewCell: UITableViewCell {
     
     @IBOutlet weak var containerView: UIView!
@@ -16,6 +20,10 @@ class MovieListTableViewCell: UITableViewCell {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var ratingLabel: UILabel!
     private var blurEffectView: UIVisualEffectView?
+    
+    weak var delegate: MovieListTableViewCellDelegate?
+    var coreDataManager = CoreDataManager.shared
+    var currentMovie: MovieResponse?
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -28,6 +36,17 @@ class MovieListTableViewCell: UITableViewCell {
         
         // Configure the view for the selected state
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        moviePosterImageView.image = nil   // optional: or keep the old one until replaced
+        moviePosterImageView.alpha = 1
+    }
+    
+    @IBAction func onCLickFavorite(_ sender: Any) {
+        removeOrAddToFavorite()
+    }
+    
     
     private func initialSetup() {
         //Container view
@@ -55,11 +74,12 @@ class MovieListTableViewCell: UITableViewCell {
         ratingLabel.textColor = UIColor(hex: "#f4f4f4")
         
         // Favorite image
-        favoriteButton.tintColor = .white
+        setupFavoriteButton()
         
     }
     
     func setupMovieTile(for movie: MovieResponse?) {
+        self.currentMovie = movie
         let rating = String(format: "%.1f", movie?.voteAverage ?? 0)
         titleLabel.text = movie?.movieTitle ?? ""
         setRating(rating)
@@ -68,6 +88,7 @@ class MovieListTableViewCell: UITableViewCell {
                 
             })
         }
+        setupFavoriteButton()
     }
     
     private func setRating(_ rating: String) {
@@ -83,6 +104,49 @@ class MovieListTableViewCell: UITableViewCell {
         
         ratingLabel.attributedText = fullString
     }
+    
+    private func setupFavoriteButton() {
+        if let currentMovie = currentMovie {
+            //FE8E86
+            let isFav = coreDataManager.isFavorite(movieId: currentMovie.movieId ?? 0)
+            if isFav {
+                favoriteButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
+                favoriteButton.tintColor = UIColor(hex: "#FF4033")
+            } else {
+                favoriteButton.setImage(UIImage(systemName: "heart"), for: .normal)
+                favoriteButton.tintColor = .white
+            }
+        } else {
+            favoriteButton.setImage(UIImage(systemName: "heart"), for: .normal)
+            favoriteButton.tintColor = .white
+        }
+    }
+    
+    private func removeOrAddToFavorite() {
+        if let currentMovie = currentMovie {
+            let isFav = coreDataManager.isFavorite(movieId: currentMovie.movieId ?? 0)
+            if isFav {
+                // remove
+                self.removeMovieFromFavorite(movieId: currentMovie.movieId ?? 0)
+            } else {
+                // add
+                self.addMovieToFavorite(currentMovie: currentMovie)
+            }
+        }
+    }
+    
+    private func removeMovieFromFavorite(movieId: Int) {
+        coreDataManager.removeFavorite(movieId: movieId) { [weak self] success in
+            self?.delegate?.didAddToFavorites(success: success)
+        }
+    }
+    
+    private func addMovieToFavorite(currentMovie: MovieResponse) {
+        coreDataManager.saveFavorite(favorite: currentMovie) { [weak self] success in
+            self?.delegate?.didAddToFavorites(success: success)
+        }
+    }
+
     
 }
 

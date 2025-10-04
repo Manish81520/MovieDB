@@ -61,6 +61,7 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let cell = tableView.dequeueReusableCell(withIdentifier: "MovieListTableViewCell") as? MovieListTableViewCell {
             cell.setupMovieTile(for: viewModel.getMovieDetail(at: indexPath.row))
+            cell.delegate = self
             return cell
         }
         return UITableViewCell()
@@ -71,3 +72,17 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+extension HomeViewController: MovieListTableViewCellDelegate {
+    func didAddToFavorites(success: Bool) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {return}
+            if success {
+                self.movieListTableView.reloadData()
+            } else {
+                //show error
+            }
+        }
+    }
+    
+    
+}
