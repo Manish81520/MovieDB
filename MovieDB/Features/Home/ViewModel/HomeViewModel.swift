@@ -11,7 +11,7 @@ final class HomeViewModel {
     
     // MARK: - Properties
     var movies: [MovieResponse]? = []
-    
+    var coreDataManager = CoreDataManager.shared
     
     // MARK: - Fetch Popular Movies
     func fetchPopularMovies(completion: @escaping (Result<[MovieResponse]?, NetworkError>) -> Void) {
@@ -36,5 +36,14 @@ final class HomeViewModel {
     
     func getMovieDetail(at index: Int) -> MovieResponse? {
         return movies?[index]
+    }
+    
+    func isReloadRequired() -> Bool {
+        if coreDataManager.favoritesChanged {
+            coreDataManager.resetFavoritesChangedFlag()
+            return true
+        }
+        
+        return false
     }
 }

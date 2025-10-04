@@ -17,6 +17,19 @@ final class CoreDataManager {
         return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     }
     
+    /// Flag to track if favorites changed
+    private(set) var favoritesChanged: Bool = false
+    
+    /// Notify that favorites changed
+    private func setFavoritesChanged() {
+        favoritesChanged = true
+    }
+    
+    /// Reset the flag after handling
+    func resetFavoritesChangedFlag() {
+        favoritesChanged = false
+    }
+    
     // MARK: - Save Favorites
     func saveFavorite(favorite: MovieResponse, completion: @escaping (Bool) -> Void) {
         
@@ -35,6 +48,7 @@ final class CoreDataManager {
         do {
             try context.save()
             debugPrint("✅ Favorite saved successfully")
+            setFavoritesChanged()
             completion(true) // success
         } catch {
             debugPrint("❌ Failed to save favorite: \(error.localizedDescription)")
@@ -78,6 +92,7 @@ final class CoreDataManager {
                 context.delete(favorite)
                 try context.save()
                 debugPrint("🗑️ Removed favorite with ID: \(movieId)")
+                setFavoritesChanged()
                 completion(true) // success
             } else {
                 debugPrint("⚠️ Favorite not found for ID: \(movieId)")

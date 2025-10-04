@@ -18,11 +18,19 @@ class HomeViewController: UIViewController {
     @IBOutlet weak var movieListTableView: UITableView!
     
     private let loadingView = LoadingView()
+    private var alertView = AlertHelper.shared
     private let viewModel = HomeViewModel()
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         setupUi()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if viewModel.isReloadRequired() {
+            self.movieListTableView.reloadData()
+        }
     }
     
     private func setupUi() {
@@ -47,8 +55,20 @@ class HomeViewController: UIViewController {
                     self.movieListTableView.reloadData()
                 case .failure(let failure):
                     self.loadingView.hide()
+                    self.alertView.showAlert(on: self, title: "Error", message: failure.message) {
+                        // Show error screen
+                    }
                 }
             }
+        }
+    }
+    
+    private func moveToMovieDetailScreen(movie: MovieResponse) {
+        let storyboard = UIStoryboard.init(name: "MovieDetailScreen", bundle: nil)
+        if let detailVc = storyboard.instantiateViewController(withIdentifier: "MovieDetailViewController") as? MovieDetailViewController {
+            let viewModel = MovieDetailViewModel(movie: movie)
+            detailVc.movieDetailViewModel = viewModel
+            self.navigationController?.pushViewController(detailVc, animated: true)
         }
     }
 }
@@ -65,6 +85,12 @@ extension HomeViewController: UITableViewDelegate, UITableViewDataSource {
             return cell
         }
         return UITableViewCell()
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let movie = viewModel.getMovieDetail(at: indexPath.row) {
+            moveToMovieDetailScreen(movie: movie)
+        }
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

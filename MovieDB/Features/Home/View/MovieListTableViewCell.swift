@@ -49,6 +49,7 @@ class MovieListTableViewCell: UITableViewCell {
     
     
     private func initialSetup() {
+        selectionStyle = .none
         //Container view
         containerView.layer.cornerRadius = 10
         containerView.clipsToBounds = true
