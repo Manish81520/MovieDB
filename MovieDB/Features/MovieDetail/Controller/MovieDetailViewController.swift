@@ -72,8 +72,8 @@ class MovieDetailViewController: UIViewController {
         genereCollectionView.delegate = self
         genereCollectionView.dataSource = self
         genereCollectionView.register(
-            UINib(nibName: "GenereCollectionViewCell", bundle: nil),
-            forCellWithReuseIdentifier: "GenereCollectionViewCell"
+            UINib(nibName: ViewControllerConstants.genereCollectionViewCell, bundle: nil),
+            forCellWithReuseIdentifier: ViewControllerConstants.genereCollectionViewCell
         )
     }
     
@@ -98,6 +98,8 @@ class MovieDetailViewController: UIViewController {
         if bottomOffset.y > 0 {
             scrollView.setContentOffset(bottomOffset, animated: true)
         }
+        
+        playerView.playVideo()
     }
     
     
@@ -114,7 +116,7 @@ class MovieDetailViewController: UIViewController {
                     self.setupDetailView()
                 } else {
                     self.loadingView.hide()
-                    self.alertView.showAlert(on: self, title: "Error", message: error ?? "") {
+                    self.alertView.showAlert(on: self, title: AppError.error, message: error ?? "") {
                         self.navigationController?.popViewController(animated: true)
                     }
                 }
@@ -162,23 +164,23 @@ class MovieDetailViewController: UIViewController {
     private func setupFavoriteButton() {
         guard let movieId = movieDetailViewModel?.getMovieDetail()?.id else { return }
         if movieDetailViewModel?.isFavoriteMovie(for: movieId) ?? false  {
-            self.addToFavouriteButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
-            self.addToFavouriteButton.setTitle("  Remove from Favorite", for: .normal)
-            addToFavouriteButton.tintColor = UIColor(hex: "#FF4033")
+            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartFillImageName), for: .normal)
+            self.addToFavouriteButton.setTitle(AppConstants.removeFromFavorite, for: .normal)
+            addToFavouriteButton.tintColor = UIColor(hex: AppConstants.heartRedColor)
         } else {
-            self.addToFavouriteButton.setImage(UIImage(systemName: "heart"), for: .normal)
-            self.addToFavouriteButton.setTitle("  Add to Favorite", for: .normal)
+            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
+            self.addToFavouriteButton.setTitle(AppConstants.addToFavorite, for: .normal)
             self.addToFavouriteButton.tintColor = .white
         }
     }
     private func updateFavoriteButton(added: Bool) {
         if added {
-            self.addToFavouriteButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
-            self.addToFavouriteButton.setTitle("  Remove from Favorite", for: .normal)
-            addToFavouriteButton.tintColor = UIColor(hex: "#FF4033")
+            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartFillImageName), for: .normal)
+            self.addToFavouriteButton.setTitle(AppConstants.removeFromFavorite, for: .normal)
+            addToFavouriteButton.tintColor = UIColor(hex: AppConstants.heartRedColor)
         } else {
-            self.addToFavouriteButton.setImage(UIImage(systemName: "heart"), for: .normal)
-            self.addToFavouriteButton.setTitle("  Add to Favorite", for: .normal)
+            self.addToFavouriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
+            self.addToFavouriteButton.setTitle(AppConstants.addToFavorite, for: .normal)
             self.addToFavouriteButton.tintColor = .white
         }
     }
@@ -228,7 +230,7 @@ class MovieDetailViewController: UIViewController {
 
 //        playerView.load(withVideoId: videoId, playerVars: playerVars)
         guard let videoId = movieDetailViewModel?.firstTrailerOrTeaserId() else {
-            print("No trailer or teaser available")
+            alertView.showAlert(on: self, title: AppError.error, message: AppError.noTrailerAvailable)
             return
         }
         playerView.load(withVideoId: videoId, playerVars: playerVars)
@@ -257,7 +259,7 @@ extension MovieDetailViewController: UICollectionViewDelegate,
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: "GenereCollectionViewCell",
+            withReuseIdentifier: ViewControllerConstants.genereCollectionViewCell,
             for: indexPath
         ) as? GenereCollectionViewCell {
             cell.setupText(for: movieDetailViewModel?.getGenere(forIndex: indexPath.row) ?? "")

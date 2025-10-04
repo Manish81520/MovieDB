@@ -30,8 +30,8 @@ class FavoriteViewController: UIViewController {
     private func setupTableView() {
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(UINib(nibName: "MovieListTableViewCell", bundle: nil), forCellReuseIdentifier: "MovieListTableViewCell")
-        tableView.register(NoFavoritesTableViewCell.self, forCellReuseIdentifier: "NoFavoritesTableViewCell")
+        tableView.register(UINib(nibName: ViewControllerConstants.movieListTableViewCell, bundle: nil), forCellReuseIdentifier: ViewControllerConstants.movieListTableViewCell)
+        tableView.register(NoFavoritesTableViewCell.self, forCellReuseIdentifier: ViewControllerConstants.noFavoritesTableViewCell)
     }
 }
 
@@ -49,14 +49,14 @@ extension FavoriteViewController: UITableViewDelegate, UITableViewDataSource {
         
         if numberOfRows > 0,
            let favouriteData = viewModel.getFavoriteMovie(at: indexPath.row),
-           let movieCell = tableView.dequeueReusableCell(withIdentifier: "MovieListTableViewCell", for: indexPath) as? MovieListTableViewCell {
+           let movieCell = tableView.dequeueReusableCell(withIdentifier: ViewControllerConstants.movieListTableViewCell, for: indexPath) as? MovieListTableViewCell {
             
             movieCell.setupMovieTile(for: favouriteData)
             movieCell.delegate = self
             return movieCell
         } else {
             // No favorites cell
-            if let noDataCell = tableView.dequeueReusableCell(withIdentifier: "NoFavoritesTableViewCell", for: indexPath) as? NoFavoritesTableViewCell {
+            if let noDataCell = tableView.dequeueReusableCell(withIdentifier: ViewControllerConstants.noFavoritesTableViewCell, for: indexPath) as? NoFavoritesTableViewCell {
                 return noDataCell
             }
         }
@@ -72,8 +72,8 @@ extension FavoriteViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     private func moveToMovieDetailScreen(movie: MovieResponse) {
-        let storyboard = UIStoryboard.init(name: "MovieDetailScreen", bundle: nil)
-        if let detailVc = storyboard.instantiateViewController(withIdentifier: "MovieDetailViewController") as? MovieDetailViewController {
+        let storyboard = UIStoryboard.init(name: ViewControllerConstants.movieDetailScreen, bundle: nil)
+        if let detailVc = storyboard.instantiateViewController(withIdentifier: ViewControllerConstants.movieDetailViewController) as? MovieDetailViewController {
             let viewModel = MovieDetailViewModel(movie: movie)
             detailVc.movieDetailViewModel = viewModel
             self.navigationController?.pushViewController(detailVc, animated: true)

@@ -84,8 +84,8 @@ class SearchViewController: UIViewController {
     }
     
     private func moveToMovieDetailScreen(movie: MovieResponse) {
-        let storyboard = UIStoryboard.init(name: "MovieDetailScreen", bundle: nil)
-        if let detailVc = storyboard.instantiateViewController(withIdentifier: "MovieDetailViewController") as? MovieDetailViewController {
+        let storyboard = UIStoryboard.init(name: ViewControllerConstants.movieDetailScreen, bundle: nil)
+        if let detailVc = storyboard.instantiateViewController(withIdentifier: ViewControllerConstants.movieDetailViewController) as? MovieDetailViewController {
             let viewModel = MovieDetailViewModel(movie: movie)
             detailVc.movieDetailViewModel = viewModel
             self.navigationController?.pushViewController(detailVc, animated: true)
@@ -104,8 +104,8 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if viewModel.errorShouldDisplay ?? false {
-            if let cell = tableView.dequeueReusableCell(withIdentifier: "DefaultTableViewCell") as? DefaultTableViewCell {
-                cell.configure(message: "Nothing to show right now", canRetry: false)
+            if let cell = tableView.dequeueReusableCell(withIdentifier: ViewControllerConstants.defaultTableViewCell) as? DefaultTableViewCell {
+                cell.configure(message: AppError.nothingToShowRightNow, canRetry: false)
                 return cell
             }
         } else {

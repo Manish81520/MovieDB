@@ -100,7 +100,7 @@ class MovieListTableViewCell: UITableViewCell {
     
     private func setRating(_ rating: String) {
         let starAttachment = NSTextAttachment()
-        starAttachment.image = UIImage(systemName: "star.fill")?.withTintColor(.systemYellow, renderingMode: .alwaysOriginal)
+        starAttachment.image = UIImage(systemName: AppConstants.starFill)?.withTintColor(.systemYellow, renderingMode: .alwaysOriginal)
         starAttachment.bounds = CGRect(x: 0, y: -2, width: 14, height: 14) // tweak y for vertical alignment
         
         let starString = NSAttributedString(attachment: starAttachment)
@@ -117,14 +117,14 @@ class MovieListTableViewCell: UITableViewCell {
             //FE8E86
             let isFav = coreDataManager.isFavorite(movieId: currentMovie.movieId ?? 0)
             if isFav {
-                favoriteButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
-                favoriteButton.tintColor = UIColor(hex: "#FF4033")
+                favoriteButton.setImage(UIImage(systemName: AppConstants.heartFillImageName), for: .normal)
+                favoriteButton.tintColor = UIColor(hex: AppConstants.heartRedColor)
             } else {
-                favoriteButton.setImage(UIImage(systemName: "heart"), for: .normal)
+                favoriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
                 favoriteButton.tintColor = .white
             }
         } else {
-            favoriteButton.setImage(UIImage(systemName: "heart"), for: .normal)
+            favoriteButton.setImage(UIImage(systemName: AppConstants.heartImageName), for: .normal)
             favoriteButton.tintColor = .white
         }
     }
